@@ -42,16 +42,26 @@ python main.py \
   --exps_dir ./exps/ \
   --exp_name filtered_experiment \
   --target_relation father \
-  --allowed_predicates "father,mother,brother" \
+  --allowed_predicates "mother,brother" \
   --batch_size 32 \
   --max_epoch 50
 ```
 
-The system will only see triples with the specified predicates (and their inverses) during training. This is useful for:
-- Focusing on specific relation types
+The system will only see triples with the specified predicates (and their inverses) during training, **plus the target relation**. In the example above, the model will train on `father`, `mother`, and `brother` relations (and their inverses).
+
+**Note:** The target relation is always automatically included in the allowed predicates, even if not explicitly specified. This ensures the model has training examples for the target relation.
+
+This is useful for:
+- Learning rules using specific background knowledge predicates
 - Reducing computational complexity
 - Controlling the domain of background knowledge
-- Experimenting with different predicate subsets
+- Experimenting with different predicate subsets to see which are most informative
+
+**Example use case:** Learn rules for "father" using only "husband" and "mother" as background knowledge:
+```bash
+python main.py --target_relation father --allowed_predicates "husband,mother"
+```
+This will train using only `father`, `husband`, and `mother` triples, and extracted rules will only use these predicates.
 
 For YAGO26K906 and AirGraph, you can run our models as bellow:
 ```
