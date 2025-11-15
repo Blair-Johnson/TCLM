@@ -43,7 +43,12 @@ class Dataset:
             # Also include inverse predicates
             for pred in predicates:
                 allowed_predicates_set.add('INV' + pred)
+            # ALWAYS include the target relation (and its inverse) in the allowed set
+            # This ensures we have training examples for the target relation
+            allowed_predicates_set.add(self.target_relation)
+            allowed_predicates_set.add('INV' + self.target_relation)
             print(f"Filtering triples to only include predicates: {allowed_predicates_set}")
+            print(f"Note: Target relation '{self.target_relation}' and its inverse are automatically included")
 
         id2entity, entity2id = {}, {}
         with open(entity_path, mode='r') as fd:

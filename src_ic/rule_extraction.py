@@ -73,7 +73,11 @@ def analysis(id2relation, relation2id, option, model_save_path):
         allowed_predicates_set = set(predicates)
         for pred in predicates:
             allowed_predicates_set.add('INV' + pred)
+        # ALWAYS include the target relation in the allowed set for rules
+        allowed_predicates_set.add(option.target_relation)
+        allowed_predicates_set.add('INV' + option.target_relation)
         print(f"Filtering rules to only include predicates: {allowed_predicates_set}")
+        print(f"Note: Target relation '{option.target_relation}' is automatically included")
     
     scores = torch.softmax(model.w[0], dim=-1)
     scores = torch.log(scores)
