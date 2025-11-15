@@ -31,6 +31,28 @@ cd src_ic
 bash run.sh
 ```
 
+#### Filtering predicates (Domain Restriction)
+
+You can restrict the training data to specific predicates using the `--allowed_predicates` flag. This allows you to control the "domain" of background knowledge when learning rule definitions:
+
+```bash
+cd src_ic
+python main.py \
+  --data_dir ../data/family/ \
+  --exps_dir ./exps/ \
+  --exp_name filtered_experiment \
+  --target_relation father \
+  --allowed_predicates "father,mother,brother" \
+  --batch_size 32 \
+  --max_epoch 50
+```
+
+The system will only see triples with the specified predicates (and their inverses) during training. This is useful for:
+- Focusing on specific relation types
+- Reducing computational complexity
+- Controlling the domain of background knowledge
+- Experimenting with different predicate subsets
+
 For YAGO26K906 and AirGraph, you can run our models as bellow:
 ```
 cd src_ec_ic
