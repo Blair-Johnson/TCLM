@@ -1,0 +1,17 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Experiment outputs
+exps_*/
+*.pkl
+*.pt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

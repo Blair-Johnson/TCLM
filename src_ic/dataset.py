@@ -34,6 +34,17 @@ class Dataset:
         entity_path = os.path.join(kg_path, 'entities.dict')
         relation_path = os.path.join(kg_path, 'relations.dict')
 
+        # Parse allowed predicates if provided
+        allowed_predicates_set = None
+        if hasattr(self.option, 'allowed_predicates') and self.option.allowed_predicates:
+            # Split comma-separated predicates and create a set
+            predicates = [p.strip() for p in self.option.allowed_predicates.split(',')]
+            allowed_predicates_set = set(predicates)
+            # Also include inverse predicates
+            for pred in predicates:
+                allowed_predicates_set.add('INV' + pred)
+            print(f"Filtering triples to only include predicates: {allowed_predicates_set}")
+
         id2entity, entity2id = {}, {}
         with open(entity_path, mode='r') as fd:
             for line in fd:
@@ -65,6 +76,11 @@ class Dataset:
                 items = line.strip().split('\t')
                 if len(items) != 3: continue
                 h, r, t = items
+                
+                # Filter by allowed predicates if specified
+                if allowed_predicates_set is not None and r not in allowed_predicates_set:
+                    continue
+                
                 triple = Triple(h, r, t)
                 triple_inv = Triple(t, 'INV' + r, h)
                 kg.append(triple)

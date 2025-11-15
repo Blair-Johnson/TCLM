@@ -361,6 +361,10 @@ if __name__ == '__main__':
     parser.add_argument('--threshold', default=1e-6, type=float)
     parser.add_argument('--negative_sampling', default=False, action="store_true")
     parser.add_argument('--seed', default=1234, type=int)
+    parser.add_argument('--allowed_predicates', default=None, type=str,
+                        help='Comma-separated list of predicates to restrict training. '
+                             'Only triples with these predicates (and their inverses) will be used. '
+                             'Example: --allowed_predicates "father,mother"')
 
     d = vars(parser.parse_args())
 
