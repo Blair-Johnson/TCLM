@@ -43,5 +43,5 @@ $python -u main.py \
         --use_gpu \
         --gpu_id $gpu_id
 
-$python -u rule_extraction.py $exp_dir $exp_name $target 1
+$python -u rule_extraction.py $exp_dir $exp_name $target 8
 done
