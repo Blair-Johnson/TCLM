@@ -357,7 +357,7 @@ if __name__ == '__main__':
     parser.add_argument('--target_relation', default=None, type=str)
     parser.add_argument('--iteration_per_batch', default=5, type=int)
     parser.add_argument('--learning_rate', default=0.1, type=float)
-    parser.add_argument('--early_stop', default=True, action="store_true")
+    parser.add_argument('--early_stop', default=False, action="store_true")
     parser.add_argument('--threshold', default=1e-6, type=float)
     parser.add_argument('--negative_sampling', default=False, action="store_true")
     parser.add_argument('--seed', default=1234, type=int)
