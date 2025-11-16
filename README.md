@@ -63,6 +63,28 @@ python main.py --target_relation father --allowed_predicates "husband,mother"
 ```
 This will train using only `father`, `husband`, and `mother` triples, and extracted rules will only use these predicates.
 
+#### Non-Recursive Rules
+
+You can prevent recursive rule definitions using the `--no_recursive_rules` flag. When enabled, the target relation will not appear in the body of extracted rules, ensuring non-recursive definitions:
+
+```bash
+python main.py \
+  --target_relation father \
+  --allowed_predicates "husband,mother" \
+  --no_recursive_rules
+```
+
+This is useful when you want to:
+- Learn definitions in terms of other predicates only
+- Avoid circular reasoning in rule definitions
+- Ensure rules are based purely on background knowledge
+
+**Example:** With `--no_recursive_rules`, you'll get rules like:
+- `father(x,y) <- husband(x,z) ∧ mother(z,y)` ✓ (valid, non-recursive)
+
+But NOT:
+- `father(x,y) <- father(x,z) ∧ brother(z,y)` ✗ (would be filtered out)
+
 For YAGO26K906 and AirGraph, you can run our models as bellow:
 ```
 cd src_ec_ic

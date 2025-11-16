@@ -79,6 +79,12 @@ def analysis(id2relation, relation2id, option, model_save_path):
         print(f"Filtering rules to only include predicates: {allowed_predicates_set}")
         print(f"Note: Target relation '{option.target_relation}' is automatically included")
     
+    # Handle no_recursive_rules flag
+    no_recursive_rules = False
+    if hasattr(option, 'no_recursive_rules') and option.no_recursive_rules:
+        no_recursive_rules = True
+        print(f"Non-recursive rules enabled: '{option.target_relation}' will not appear in rule bodies")
+    
     scores = torch.softmax(model.w[0], dim=-1)
     scores = torch.log(scores)
     indices_order = torch.argsort(scores, dim=-1, descending=True)
@@ -129,6 +135,9 @@ def analysis(id2relation, relation2id, option, model_save_path):
                     # Filter by allowed predicates if specified
                     if allowed_predicates_set is not None and relation_name not in allowed_predicates_set:
                         continue
+                    # Filter out target relation if no_recursive_rules is enabled
+                    if no_recursive_rules and (relation_name == option.target_relation or relation_name == 'INV' + option.target_relation):
+                        continue
                     if transform_score(h_[r], T) >= thr:
                         if count > 0: rule += ' ∨ '
                         tmp = relation_name.split('/')[-1]
@@ -160,6 +169,10 @@ def analysis(id2relation, relation2id, option, model_save_path):
                     # Filter by allowed predicates if specified
                     if allowed_predicates_set is not None and relation_name not in allowed_predicates_set:
                         # Skip this relation if not allowed - use Identity instead
+                        output = None
+                    # Filter out target relation if no_recursive_rules is enabled
+                    elif no_recursive_rules and (relation_name == option.target_relation or relation_name == 'INV' + option.target_relation):
+                        # Skip target relation in rule body to avoid recursion
                         output = None
                     else:
                         tmp = relation_name.split('/')[-1]

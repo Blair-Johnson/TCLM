@@ -365,6 +365,9 @@ if __name__ == '__main__':
                         help='Comma-separated list of predicates to restrict training. '
                              'Only triples with these predicates (and their inverses) will be used. '
                              'Example: --allowed_predicates "father,mother"')
+    parser.add_argument('--no_recursive_rules', default=False, action="store_true",
+                        help='Disable recursive rule definitions. When enabled, the target relation '
+                             'will not appear in the body of extracted rules, preventing recursion.')
 
     d = vars(parser.parse_args())
 
