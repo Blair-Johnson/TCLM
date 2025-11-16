@@ -34,11 +34,20 @@ def apply_inv(rule:str):
         new_chunks.append(atom[:args_start] + f"({arg2},{arg1})" + atom[args_end+1:])
     return head + " :- " + "".join(new_chunks)
 
+def strip_types(rule:str):
+    if '((' in rule:
+        start = rule.find("((")
+        end = rule.rfind("))")
+        return rule[:start] + rule[end+2:]
+    else:
+        return rule
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("target_dir", type=str, help="directory with .txt files of rules.")
     parser.add_argument("output_file", type=str, help="path to .pl file to store learned rules in.")
+    parser.add_argument("--strip_types", default=False, action='store_true', help="remove implicit types from aux terms in rule.")
     args = parser.parse_args()
 
     targets = []
@@ -54,6 +63,9 @@ if __name__ == '__main__':
                 rule = map_to_prolog(rule)
                 if not rule.replace(" ", "").endswith(":-."):
                     rule = apply_inv(rule)
+                    if args.strip_types:
+                        rule = strip_types(rule)
+                        rule = rule.strip().strip('.').strip().strip(',').strip()+'.'
                     rules.append(rule)
 
     rules = sorted(list(set(rules)))
