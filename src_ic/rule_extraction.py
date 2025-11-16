@@ -65,6 +65,26 @@ def analysis(id2relation, relation2id, option, model_save_path):
     model.load_state_dict(torch.load(model_save_path, map_location=torch.device('cpu')))
     model.eval()
     n = len(relation2id)
+    
+    # Parse allowed predicates if provided
+    allowed_predicates_set = None
+    if hasattr(option, 'allowed_predicates') and option.allowed_predicates:
+        predicates = [p.strip() for p in option.allowed_predicates.split(',')]
+        allowed_predicates_set = set(predicates)
+        for pred in predicates:
+            allowed_predicates_set.add('INV' + pred)
+        # ALWAYS include the target relation in the allowed set for rules
+        allowed_predicates_set.add(option.target_relation)
+        allowed_predicates_set.add('INV' + option.target_relation)
+        print(f"Filtering rules to only include predicates: {allowed_predicates_set}")
+        print(f"Note: Target relation '{option.target_relation}' is automatically included")
+    
+    # Handle no_recursive_rules flag
+    no_recursive_rules = False
+    if hasattr(option, 'no_recursive_rules') and option.no_recursive_rules:
+        no_recursive_rules = True
+        print(f"Non-recursive rules enabled: '{option.target_relation}' will not appear in rule bodies")
+    
     scores = torch.softmax(model.w[0], dim=-1)
     scores = torch.log(scores)
     indices_order = torch.argsort(scores, dim=-1, descending=True)
@@ -111,9 +131,16 @@ def analysis(id2relation, relation2id, option, model_save_path):
                 if t == option.step - 1: left = 'y'
                 count = 0
                 for r in range(len(relation2id) - 1):
+                    relation_name = id2relation[r]
+                    # Filter by allowed predicates if specified
+                    if allowed_predicates_set is not None and relation_name not in allowed_predicates_set:
+                        continue
+                    # Filter out target relation if no_recursive_rules is enabled
+                    if no_recursive_rules and (relation_name == option.target_relation or relation_name == 'INV' + option.target_relation):
+                        continue
                     if transform_score(h_[r], T) >= thr:
                         if count > 0: rule += ' ∨ '
-                        tmp = id2relation[r].split('/')[-1]
+                        tmp = relation_name.split('/')[-1]
                         rule += '{}({}, {})'.format(tmp, left, 'u_{}'.format(count))
                         count += 1
                 rule += ')'
@@ -136,23 +163,37 @@ def analysis(id2relation, relation2id, option, model_save_path):
             y = ''
             for t in range(option.step):
                 c = int(outputs[l][t][beam])
+                output = None
                 if c < n:
-                    tmp = id2relation[c].split('/')[-1]
-                    # if c >= n // 2: tmp = 'INV_' + tmp
-                    x = 'x'
-                    if counts[l][beam] > 0: x = 'z_{}'.format(int(counts[l][beam]) - 1)
-                    y = 'z_{}'.format(int(counts[l][beam]))
-                    if t == option.step - 1: y = 'y'
-                    output = tmp + '({}, {})'.format(x, y)
-                    counts[l][beam] += 1
+                    relation_name = id2relation[c]
+                    # Filter by allowed predicates if specified
+                    if allowed_predicates_set is not None and relation_name not in allowed_predicates_set:
+                        # Skip this relation if not allowed - use Identity instead
+                        output = None
+                    # Filter out target relation if no_recursive_rules is enabled
+                    elif no_recursive_rules and (relation_name == option.target_relation or relation_name == 'INV' + option.target_relation):
+                        # Skip target relation in rule body to avoid recursion
+                        output = None
+                    else:
+                        tmp = relation_name.split('/')[-1]
+                        # if c >= n // 2: tmp = 'INV_' + tmp
+                        x = 'x'
+                        if counts[l][beam] > 0: x = 'z_{}'.format(int(counts[l][beam]) - 1)
+                        y = 'z_{}'.format(int(counts[l][beam]))
+                        if t == option.step - 1: y = 'y'
+                        output = tmp + '({}, {})'.format(x, y)
+                        counts[l][beam] += 1
                 else:
                     identity = 'x'
                     if t != 0 and y != '': identity = y
                     output = 'Identity({}, {})'.format(identity, identity)
-                end = ''
-                if t < option.step - 1: end = ' ∧ '
-                rules[beam] += output + end
-                if t == option.step - 1 and len(hidden_rules[l]) > 2: rules[beam] += ' ∧ ' + hidden_rules[l]
+                
+                # Only add output if it's not None (i.e., not filtered out)
+                if output is not None:
+                    end = ''
+                    if t < option.step - 1: end = ' ∧ '
+                    rules[beam] += output + end
+                    if t == option.step - 1 and len(hidden_rules[l]) > 2: rules[beam] += ' ∧ ' + hidden_rules[l]
         all_rules.append(rules)
 
     ids_sort = torch.argsort(model.weight.squeeze(dim=-1), descending=True)

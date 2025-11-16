@@ -357,10 +357,17 @@ if __name__ == '__main__':
     parser.add_argument('--target_relation', default=None, type=str)
     parser.add_argument('--iteration_per_batch', default=5, type=int)
     parser.add_argument('--learning_rate', default=0.1, type=float)
-    parser.add_argument('--early_stop', default=True, action="store_true")
+    parser.add_argument('--early_stop', default=False, action="store_true")
     parser.add_argument('--threshold', default=1e-6, type=float)
     parser.add_argument('--negative_sampling', default=False, action="store_true")
     parser.add_argument('--seed', default=1234, type=int)
+    parser.add_argument('--allowed_predicates', default=None, type=str,
+                        help='Comma-separated list of predicates to restrict training. '
+                             'Only triples with these predicates (and their inverses) will be used. '
+                             'Example: --allowed_predicates "father,mother"')
+    parser.add_argument('--no_recursive_rules', default=False, action="store_true",
+                        help='Disable recursive rule definitions. When enabled, the target relation '
+                             'will not appear in the body of extracted rules, preventing recursion.')
 
     d = vars(parser.parse_args())
 

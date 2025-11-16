@@ -31,6 +31,60 @@ cd src_ic
 bash run.sh
 ```
 
+#### Filtering predicates (Domain Restriction)
+
+You can restrict the training data to specific predicates using the `--allowed_predicates` flag. This allows you to control the "domain" of background knowledge when learning rule definitions:
+
+```bash
+cd src_ic
+python main.py \
+  --data_dir ../data/family/ \
+  --exps_dir ./exps/ \
+  --exp_name filtered_experiment \
+  --target_relation father \
+  --allowed_predicates "mother,brother" \
+  --batch_size 32 \
+  --max_epoch 50
+```
+
+The system will only see triples with the specified predicates (and their inverses) during training, **plus the target relation**. In the example above, the model will train on `father`, `mother`, and `brother` relations (and their inverses).
+
+**Note:** The target relation is always automatically included in the allowed predicates, even if not explicitly specified. This ensures the model has training examples for the target relation.
+
+This is useful for:
+- Learning rules using specific background knowledge predicates
+- Reducing computational complexity
+- Controlling the domain of background knowledge
+- Experimenting with different predicate subsets to see which are most informative
+
+**Example use case:** Learn rules for "father" using only "husband" and "mother" as background knowledge:
+```bash
+python main.py --target_relation father --allowed_predicates "husband,mother"
+```
+This will train using only `father`, `husband`, and `mother` triples, and extracted rules will only use these predicates.
+
+#### Non-Recursive Rules
+
+You can prevent recursive rule definitions using the `--no_recursive_rules` flag. When enabled, the target relation will not appear in the body of extracted rules, ensuring non-recursive definitions:
+
+```bash
+python main.py \
+  --target_relation father \
+  --allowed_predicates "husband,mother" \
+  --no_recursive_rules
+```
+
+This is useful when you want to:
+- Learn definitions in terms of other predicates only
+- Avoid circular reasoning in rule definitions
+- Ensure rules are based purely on background knowledge
+
+**Example:** With `--no_recursive_rules`, you'll get rules like:
+- `father(x,y) <- husband(x,z) ∧ mother(z,y)` ✓ (valid, non-recursive)
+
+But NOT:
+- `father(x,y) <- father(x,z) ∧ brother(z,y)` ✗ (would be filtered out)
+
 For YAGO26K906 and AirGraph, you can run our models as bellow:
 ```
 cd src_ec_ic
