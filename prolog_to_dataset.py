@@ -118,9 +118,7 @@ def write_train_file(facts, entities, output_file):
     """
     with open(output_file, 'w') as f:
         for relation, entity1, entity2 in facts:
-            entity1_id = entities[entity1]
-            entity2_id = entities[entity2]
-            f.write(f"{entity1_id}\t{relation}\t{entity2_id}\n")
+            f.write(f"{entity1}\t{relation}\t{entity2}\n")
 
 
 def main():
