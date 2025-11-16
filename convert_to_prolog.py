@@ -61,6 +61,8 @@ if __name__ == '__main__':
         for attempt in target:
             for rule in attempt["rules"]:
                 rule = map_to_prolog(rule)
+                if "Identity" in rule:
+                    continue
                 if not rule.replace(" ", "").endswith(":-."):
                     rule = apply_inv(rule)
                     if args.strip_types:
